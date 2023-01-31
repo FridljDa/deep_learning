@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{DefaultPackages, GeneralCommands, MathematicA}
+
+
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+ 
+  
+\begin{document}
+\section{}
+\section{}
+\section{}
+\section{}
+\subsection{}
+Consider a single perceptron. Let $\sigma$ be the activation function of the perceptron i.e. $\sigma(x)= \one (x >0)$ . Let $w$ denote the weights and $b$ the bias. Then the output of the perceptron for an input $x$ is $\sigma(w x +b)$. Rescaling the weights and bias by $c>0$ is 
+
+$$\sigma(cw x +cb)=\sigma(c(w x +b))= \one (c(w x +b) >0)= \one (w x +b >0)=\sigma(cw x +cb).$$
+
+We used $c>0$. Since this holds true for every perceptron in a perceptron network, rescaling does not behave the behaviour. 
+\subsection{}
+The sigmoid function is
+$$\sigma(x)=\frac{1}{1+e^{-x}}.$$
+
+Then 
+$$\sigma(c(w x +b))=\frac{1}{1+e^{-c(w x +b)}}=\frac{1}{1+(e^{-(w x +b)})^c}.$$
+
+We see that for $w x +b\neq 0$ we have $\lim_{c\to \infty}\sigma(c(w x +b))=\one (w x +b >0)$, which is exactly the behavior of a perceptron. For $w x +b\neq 0$ we have $\sigma(c(w x +b))=0.5$ for all $c$.
+\subsection{}
+$W_1 = ()$
+\end{document}
