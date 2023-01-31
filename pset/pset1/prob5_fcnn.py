@@ -5,7 +5,7 @@ of handwritten digits (http://yann.lecun.com/exdb/mnist/).
 """
 
 import torch
-import torch.nn as nn  # neural network modules
+import torch.nn as nn  # neural network modules 
 import torch.nn.functional as F  # activation functions
 import torch.optim as optim  # optimizer
 from torch.autograd import Variable # add gradients to tensors
@@ -14,6 +14,10 @@ import torchvision.datasets as datasets
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter('runs/fcnn')
 
 torch.manual_seed(42)
 
@@ -54,9 +58,11 @@ test_dataset = torch.utils.data.TensorDataset(test_data, test_labels)
 # ##################################
 
 # parameters
-learning_rate = 1000000000000000 # Ha ha! This means it will learn really quickly, right?
-num_epochs = 1000 # Training for a long time to see overfitting
+learning_rate = 0.01 # Ha ha! This means it will learn really quickly, right?
+#TODO Daniel increase epochs
+num_epochs = 100 # Training for a long time to see overfitting
 batch_size = 128
+n_hidden_1 = 64
 
 # network parameters
 num_input = 784  # MNIST data input (img shape: 28*28)
@@ -162,78 +168,7 @@ loss_functions = {
     "CE": torch.nn.CrossEntropyLoss()
 }
 
-# ##################################
-# MAIN TRAINING FUNCTION
-# ##################################
-
-def train():
-    # HINT: You can pass in arguments to our training function that may be
-    # hyperparameters, loss functions, regularization terms etc.
-    # Ex.
-    # def train(learning_rate=1000000000000000, num_epochs=1000, n_hidden_1=64, ...):
-
-    model = FCNN(num_input, num_classes)
-
-    # TODO 5.2: Choose the loss function
-    loss_func = loss_functions["CE"]
-
-    # TODO 5.1: Choose the optimizer and learning rate
-    # TODO 5.3: L2 regularization could be implement here
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
-    
-    # Initialize loss list
-    metrics = [[0, 0]]
-
-    # Iterate over epochs
-    for ep in range(num_epochs):
-        model.train()
-
-        # Iterate over batches
-        for batch_indx, batch in enumerate(trainloader):
-
-            # This is the code that runs every batch
-            # ...
-
-            # unpack batch
-            data, labels = batch
-
-            ###################
-            # TODO 5.1
-            ##################
-            # Complete the training loop by feeding the data to the model, comparing the output to the actual labels to
-            # compute a loss, backpropogating the loss, and updating the model parameters.
-
-            # Your code here
-
-            # TODO 5.2: MSE loss requires labels to be one-hot vectors
-            # TODO 5.3: Regularization could be implement here
-
-
-        # And here you might put things that run every epoch
-        # ...
-
-        # Compute full train and test accuracies every epoch
-        model.eval() # Model will not calculate gradients for this pass, and will disable dropout
-        train_ep_pred = model(train_data)
-        test_ep_pred = model(test_data)
-
-        train_accuracy = get_accuracy(train_ep_pred, train_labels)
-        test_accuracy = get_accuracy(test_ep_pred, test_labels)
-
-        # Print loss every 10 epochs (you can change this frequency)
-        if ep % 10 == 0:
-            print(f"train acc: {train_accuracy:.2f}\t test acc: {test_accuracy:.2f}\t at epoch: {ep}")
-        # Save the training and testing accuracies
-        metrics.append([train_accuracy, test_accuracy])
-
-    return np.array(metrics), model
-
-# So using the training function, you would ultimately be left with your metrics (in this case accuracy vs epoch) and 
-# your trained model.
-# 
-# Ex. 
-# metric_array, trained_model = train()
-
+#plot 
 def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, ax=None):
 
     # You can pass the same axis to the plot function
@@ -263,13 +198,110 @@ def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, a
 
     if ax is None:
         plt.show()
+    else :
+        return ax
+
+# ##################################
+# MAIN TRAINING FUNCTION
+# ##################################
+
+def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = "CE", p=None):
+    # HINT: You can pass in arguments to our training function that may be
+    # hyperparameters, loss functions, regularization terms etc.
+    # Ex.
+    # def train(learning_rate=1000000000000000, num_epochs=1000, n_hidden_1=64, ...):
+
+    model = FCNN(num_input, num_classes, n_hidden_1 = n_hidden_1, p=p)
+
+    # TODO 5.2: Choose the loss function
+    loss_func = loss_functions[loss_functions_label]
+
+    # TODO 5.1: Choose the optimizer and learning rate
+    # TODO 5.3: L2 regularization could be implement here
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+    
+    # Initialize loss list
+    metrics = [[0, 0]]
+
+    # Iterate over epochs
+    for ep in range(num_epochs):
+        model.train()
+
+        # Iterate over batches
+        for batch_indx, batch in enumerate(trainloader):
+
+            # This is the code that runs every batch
+            # ...
+
+            # unpack batch
+            data, labels = batch
+
+            ###################
+            # TODO 5.1
+            ##################
+            # Complete the training loop by feeding the data to the model, comparing the output to the actual labels to
+            # compute a loss, backpropogating the loss, and updating the model parameters.
+            
+            #feed data to model
+            # zero the parameter gradients
+            optimizer.zero_grad()
+            
+            outputs = model(data)
+            loss = loss_func(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            # Your code here
+
+            # TODO 5.2: MSE loss requires labels to be one-hot vectors
+            # TODO 5.3: Regularization could be implement here
+
+
+        # And here you might put things that run every epoch
+        # ...
+
+        # Compute full train and test accuracies every epoch
+        model.eval() # Model will not calculate gradients for this pass, and will disable dropout
+        train_ep_pred = model(train_data)
+        test_ep_pred = model(test_data)
+
+        train_accuracy = get_accuracy(train_ep_pred, train_labels)
+        test_accuracy = get_accuracy(test_ep_pred, test_labels)
+
+        # Save the training and testing accuracies
+        metrics.append([train_accuracy, test_accuracy])
+
+        # Print loss every 10 epochs (you can change this frequency)
+        if ep % 10 == 0:
+            print(f"train acc: {train_accuracy:.2f}\t test acc: {test_accuracy:.2f}\t at epoch: {ep}")
+            #add to writer 
+            writer.add_scalar("train_accuracy", train_accuracy, ep)
+            writer.add_scalar("test_accuracy", test_accuracy, ep)
+
+            # ...log a Matplotlib Figure showing the model's predictions on a
+            # random mini-batch
+            #writer.add_figure('predictions vs. actuals',
+            #                plot_accuracies_v_epoch(np.array(metrics), f"2 layers, sigmoid, lr = {learning_rate}"),
+            #                global_step=ep)
+
+        
+    #save the following parameters learning_rate, num_epochs, n_hidden_1, loss_functions_label, p
+    writer.add_hparams({"learning_rate": learning_rate, "num_epochs": num_epochs, "n_hidden_1": n_hidden_1, "loss_functions_label": loss_functions_label, "p": p}, {"train_accuracy": train_accuracy, "test_accuracy": test_accuracy})
+    writer.close()
+    return np.array(metrics), model
+
+# So using the training function, you would ultimately be left with your metrics (in this case accuracy vs epoch) and 
+# your trained model.
+# 
+# Ex. 
+# metric_array, trained_model = train()
 
 
 if __name__ == '__main__':
     metrics, model = train()
-    plot_accuracies_v_epoch(metrics, f"2 layers, sigmoid, lr = {learning_rate}")
+    #plot_accuracies_v_epoch(metrics, f"2 layers, sigmoid, lr = {learning_rate}")
 
-    fig, ax = plt.subplots()
-    plot_accuracies_v_epoch(metrics, f"train, 2 layers, sigmoid, lr = {learning_rate}", ax=ax)
-    plot_accuracies_v_epoch(metrics, f"test , 2 layers, sigmoid, lr = {learning_rate}", plot_training=False, ax=ax)
-    plt.show()
+    #fig, ax = plt.subplots()
+    #plot_accuracies_v_epoch(metrics, f"train, 2 layers, sigmoid, lr = {learning_rate}", ax=ax)
+    #plot_accuracies_v_epoch(metrics, f"test , 2 layers, sigmoid, lr = {learning_rate}", plot_training=False, ax=ax)
+    #plt.show()
