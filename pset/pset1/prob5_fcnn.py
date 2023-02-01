@@ -60,9 +60,24 @@ test_dataset = torch.utils.data.TensorDataset(test_data, test_labels)
 # parameters
 learning_rate = 0.01 # Ha ha! This means it will learn really quickly, right?
 #TODO Daniel increase epochs
-num_epochs = 100 # Training for a long time to see overfitting
+num_epochs = 150 # Training for a long time to see overfitting
 batch_size = 128
-n_hidden_1 = 64
+n_hidden_1 = 500
+
+# TODO 5.2: Defining loss functions
+loss_functions = {
+    "CE": torch.nn.CrossEntropyLoss(),
+    "MSE": torch.nn.MSELoss(),
+    "L1": torch.nn.L1Loss()
+}
+loss_functions_label = "CE"
+
+activation_functions = {
+    "sigmoid": nn.Sigmoid(),
+    "relu": nn.ReLU(),
+    "tanh": nn.Tanh()
+}
+activation_functions_label = "sigmoid"
 
 # network parameters
 num_input = 784  # MNIST data input (img shape: 28*28)
@@ -75,7 +90,7 @@ num_classes = 10  # MNIST total classes (0-9 digits)
 # Method 1: define a python class, which inherits the rudimentary functionality of a neural network from nn.Module
 
 class FCNN(nn.Module):
-    def __init__(self, input_dim, output_dim, n_hidden_1=64, p=None):
+    def __init__(self, input_dim, output_dim, n_hidden_1=64, p=None, activation_functions_label = "sigmoid"):
         super(FCNN, self).__init__()
         
         # As you'd guess, these variables are used to set the number of dimensions coming in and out of the network. We
@@ -94,7 +109,7 @@ class FCNN(nn.Module):
         # TODO 5.1: Create possible extra layers here
 
         # You can find many other nonlinearities on the PyTorch docs.
-        self.nonlin1 = nn.Sigmoid()
+        self.nonlin1 = activation_functions[activation_functions_label]
         # TODO 5.1: You might try some different activation functions here
 
     def forward(self, x):
@@ -112,6 +127,14 @@ class FCNN(nn.Module):
         else:
             # TODO 5.3: Apply dropout to both hidden layers, using a special type of PyTorch layer
             # -- https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html
+            #apply drop-out to the first layer
+            x = self.layer1(x)
+            x = self.nonlin1(x)
+            x = nn.Dropout(self.p)(x)
+            #apply drop-out to the second layer
+            x = self.layer2(x)
+            x = nn.Dropout(self.p)(x)
+
             pass
 
         return x
@@ -163,11 +186,6 @@ def lp_reg(params, p=1):
 # ##################################
 trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-# TODO 5.2: Defining loss functions
-loss_functions = {
-    "CE": torch.nn.CrossEntropyLoss()
-}
-
 #plot 
 def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, ax=None):
 
@@ -205,13 +223,13 @@ def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, a
 # MAIN TRAINING FUNCTION
 # ##################################
 
-def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = "CE", p=None):
+def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = "CE", activation_functions_label = "sigmoid", p=None):
     # HINT: You can pass in arguments to our training function that may be
     # hyperparameters, loss functions, regularization terms etc.
     # Ex.
     # def train(learning_rate=1000000000000000, num_epochs=1000, n_hidden_1=64, ...):
 
-    model = FCNN(num_input, num_classes, n_hidden_1 = n_hidden_1, p=p)
+    model = FCNN(num_input, num_classes, n_hidden_1 = n_hidden_1, activation_functions_label = activation_functions_label, p=p)
 
     # TODO 5.2: Choose the loss function
     loss_func = loss_functions[loss_functions_label]
@@ -247,14 +265,17 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
             optimizer.zero_grad()
             
             outputs = model(data)
+            if(loss_functions_label == "MSE" or loss_functions_label == "L1"):
+                labels = to_one_hot(labels)
+
             loss = loss_func(outputs, labels)
             loss.backward()
             optimizer.step()
 
             # Your code here
 
-            # TODO 5.2: MSE loss requires labels to be one-hot vectors
             # TODO 5.3: Regularization could be implement here
+            #reg = lp_reg(model.parameters(), p=p)
 
 
         # And here you might put things that run every epoch
@@ -278,6 +299,10 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
             writer.add_scalar("train_accuracy", train_accuracy, ep)
             writer.add_scalar("test_accuracy", test_accuracy, ep)
 
+            writer.add_scalars(f'accuracy', {
+                'train': train_accuracy,
+                'test': test_accuracy,
+            }, ep)
             # ...log a Matplotlib Figure showing the model's predictions on a
             # random mini-batch
             #writer.add_figure('predictions vs. actuals',
@@ -286,8 +311,9 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
 
         
     #save the following parameters learning_rate, num_epochs, n_hidden_1, loss_functions_label, p
-    writer.add_hparams({"learning_rate": learning_rate, "num_epochs": num_epochs, "n_hidden_1": n_hidden_1, "loss_functions_label": loss_functions_label, "p": p}, {"train_accuracy": train_accuracy, "test_accuracy": test_accuracy})
-    writer.close()
+    writer.add_hparams({"learning_rate": learning_rate, "num_epochs": num_epochs, "n_hidden_1": n_hidden_1, "loss_functions_label": loss_functions_label, "p": p, "activation_functions_label":  activation_functions_label}, 
+    {"train_accuracy": train_accuracy, "test_accuracy": test_accuracy})
+
     return np.array(metrics), model
 
 # So using the training function, you would ultimately be left with your metrics (in this case accuracy vs epoch) and 
@@ -298,7 +324,7 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
 
 
 if __name__ == '__main__':
-    metrics, model = train()
+    metrics, model = train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = loss_functions_label, p=None)
     #plot_accuracies_v_epoch(metrics, f"2 layers, sigmoid, lr = {learning_rate}")
 
     #fig, ax = plt.subplots()
