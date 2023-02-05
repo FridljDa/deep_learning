@@ -10,6 +10,7 @@
   
 \begin{document}
 \section{}
+In a classical algorithm the instructions are specified by the programmer before run time. In a machine learning frame work, the programmer provides data the machine learning algorithm uses to train and determine most of the parameters. Based on the learned parameters, the output for new input is calculated.
 \section{}
 \section{}
 \section{}
@@ -29,80 +30,4 @@ $$\sigma(c(w x +b))=\frac{1}{1+e^{-c(w x +b)}}=\frac{1}{1+(e^{-(w x +b)})^c}.$$
 We see that for $w x +b\neq 0$ we have $\lim_{c\to \infty}\sigma(c(w x +b))=\one (w x +b >0)$, which is exactly the behavior of a perceptron. For $w x +b\neq 0$ we have $\sigma(c(w x +b))=0.5$ for all $c$.
 \subsection{}
 $W_1 = ()$
-
-\section{MNIST}
-\subsection{Result of experiments}
-\begin{table}[tbp]
-\begin{tabular}{lllllll}
-learning\_rate & num\_epochs & n\_hidden\_1 & loss\_functions\_label & activation\_functions\_label & train\_accuracy & test\_accuracy \\ \hline
-$0.1$ & $1\cdot 10^{3}$ & $64$ & CE & sigmoid & $99.7$ & $81.4$ \\
-$0.1$ & $100$ & $64$ & CE & sigmoid & $96.3$ & $80.6$ \\
-$0.01$ & $100$ & $64$ & CE & sigmoid & $95.6$ & $75.2$ \\
-$0.01$ & $100$ & $1\cdot 10^{3}$ & CE & sigmoid & $99.7$ & $81.2$ \\
-$0.001$ & $100$ & $64$ & CE & sigmoid & $77.6$ & $53.8$ \\
-$0.1$ & $100$ & $64$ & CE & sigmoid & $96.3$ & $80.6$ \\
-$0.1$ & $100$ & $64$ & MSE & sigmoid & $96.9$ & $75.1$ \\
-$0.2$ & $100$ & $64$ & MSE & sigmoid & $96.8$ & $77.8$ \\
-$0.2$ & $100$ & $64$ & CE & sigmoid & $86$ & $68.9$ \\
-$0.1$ & $100$ & $64$ & CE & sigmoid & $96.3$ & $80.6$ \\
-$0.1$ & $100$ & $64$ & CE & sigmoid & $96.3$ & $80.6$ \\
-\hline
-\end{tabular}
-\end{table}
-
-
-\begin{figure}
-\centering
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/train_accuracy.png}
-  \captionof{figure}{train accuracy best run}
-  \label{fig:test1}
-\end{minipage}%
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/test_accuracy.png}
-  \captionof{figure}{test accuracy best run}
-  \label{fig:test2}
-\end{minipage}
-\end{figure}
-
-700 epochs were necessary to achieve top performance
-
-\begin{figure}
-\centering
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/train_accuracy_2.png}
-  \captionof{figure}{train accuracy second best run}
-\end{minipage}%
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/test_accuracy_2.png}
-  \captionof{figure}{test accuracy second best run}
-
-\end{minipage}
-\end{figure}
-
-all epochs were necessary to achieve top performance
-
-\subsection{MSE vs CE}
-MSE converges fast and has the highest test accuracy. 
-\begin{figure}
-\centering
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/accuracy_ce.png}
-  \captionof{figure}{CE}
-\end{minipage}%
-\begin{minipage}{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\linewidth]{result_files/accuracy_mse.png}
-  \captionof{figure}{MSE}
-
-\end{minipage}
-\end{figure}
-
-
-
 \end{document}

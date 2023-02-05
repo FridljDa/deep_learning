@@ -72,6 +72,11 @@ loss_functions = {
 }
 loss_functions_label = "CE"
 
+#regularization
+p = 0.05
+exp_reg = 2
+lambda_reg = 0#.01 #0.001
+
 activation_functions = {
     "sigmoid": nn.Sigmoid(),
     "relu": nn.ReLU(),
@@ -187,7 +192,7 @@ def lp_reg(params, p=1):
 trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 #plot 
-def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, ax=None):
+def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, ax=None, generalisation_gap = False):
 
     # You can pass the same axis to the plot function
     # to plot multiple lines on a single figure
@@ -206,6 +211,13 @@ def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, a
     title = "Training accuracies" if plot_training else "Testing accuracies"
     index = 0 if plot_training else 1
 
+    if generalisation_gap:
+        title = "Generalisation gap"
+        #add third column to metric_array as difference of first column and second column
+        metric_array = np.append(metric_array, np.zeros((len(metric_array),1)), axis=1)
+        metric_array[:,2] = metric_array[:,0] - metric_array[:,1]
+        index = 2
+
     epochs = np.arange(1, len(metric_array)+1)
     ax.plot(epochs, metric_array[:,index], label=experiment_name)
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -223,7 +235,7 @@ def plot_accuracies_v_epoch(metric_array, experiment_name, plot_training=True, a
 # MAIN TRAINING FUNCTION
 # ##################################
 
-def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = "CE", activation_functions_label = "sigmoid", p=None):
+def train(learning_rate = 0.01, num_epochs=150, n_hidden_1=500, loss_functions_label = "CE", activation_functions_label = "sigmoid", p=None, lambda_reg = 0, exp_reg = 2):
     # HINT: You can pass in arguments to our training function that may be
     # hyperparameters, loss functions, regularization terms etc.
     # Ex.
@@ -269,13 +281,15 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
                 labels = to_one_hot(labels)
 
             loss = loss_func(outputs, labels)
+            if lambda_reg != 0:
+                reg = lambda_reg * lp_reg(model.parameters(), p=exp_reg)
+                loss += reg
+            # TODO 5.3: Regularization could be implement here
+
             loss.backward()
             optimizer.step()
 
             # Your code here
-
-            # TODO 5.3: Regularization could be implement here
-            #reg = lp_reg(model.parameters(), p=p)
 
 
         # And here you might put things that run every epoch
@@ -294,14 +308,16 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
 
         # Print loss every 10 epochs (you can change this frequency)
         if ep % 10 == 0:
-            print(f"train acc: {train_accuracy:.2f}\t test acc: {test_accuracy:.2f}\t at epoch: {ep}")
+            #print(f"train acc: {train_accuracy:.2f}\t test acc: {test_accuracy:.2f}\t at epoch: {ep}")
             #add to writer 
             writer.add_scalar("train_accuracy", train_accuracy, ep)
             writer.add_scalar("test_accuracy", test_accuracy, ep)
+            writer.add_scalar("generalisation_gap", train_accuracy-test_accuracy, ep)
 
             writer.add_scalars(f'accuracy', {
                 'train': train_accuracy,
                 'test': test_accuracy,
+                "generalisation_gap":  train_accuracy -test_accuracy 
             }, ep)
             # ...log a Matplotlib Figure showing the model's predictions on a
             # random mini-batch
@@ -324,7 +340,7 @@ def train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hid
 
 
 if __name__ == '__main__':
-    metrics, model = train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = loss_functions_label, p=None)
+    metrics, model = train(learning_rate = learning_rate, num_epochs=num_epochs, n_hidden_1=n_hidden_1, loss_functions_label = loss_functions_label, p=p, lambda_reg = lambda_reg, exp_reg = exp_reg)
     #plot_accuracies_v_epoch(metrics, f"2 layers, sigmoid, lr = {learning_rate}")
 
     #fig, ax = plt.subplots()

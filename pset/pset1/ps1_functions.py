@@ -33,7 +33,7 @@ def problem2_evaluate_function_on_random_noise(N, sigma):
 
 
 
-def problem2_fit_polynomial(x, y, degree, regularization= 0):
+def problem2_fit_polynomial(x, y, degree, regularization = 0):
     """Returns optimal coefficients for a polynomial of the given degree
     to fit the data, using the Moore-Penrose Pseudoinverse (specified in the assignment)
     Note: this function only needs to function for degrees 1,2, and 9 --
@@ -62,9 +62,9 @@ def problem2_fit_polynomial(x, y, degree, regularization= 0):
     X_matrix = np.array([X_i ** n for X_i in x for n in range(0, degree)]).reshape(len(x),degree)
 
     #pseudo inverse of X_matrix
-    #X_matrix_pinv = np.linalg.pinv(X_matrix)
 
-    X_matrix_pinv = (X_matrix.T @ X_matrix + regularization * np.identity(degree)) @ X_matrix.T
+    X_matrix_pinv = np.linalg.inv(X_matrix.T @ X_matrix + regularization * np.identity(degree)) @ X_matrix.T
+
 
     coeffs = np.dot(X_matrix_pinv, y)
 
