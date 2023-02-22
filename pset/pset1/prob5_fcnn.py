@@ -183,7 +183,8 @@ def lp_reg(params, p=1):
     total = 0
     for w in params:
         if len(w.shape) > 1: # if this isn't a bias
-            total += torch.sum(w**p)
+            #total += torch.sum(w**p)
+            total += torch.sum(torch.abs(w)**p)
     return total ** (1/p)
 
 # ##################################

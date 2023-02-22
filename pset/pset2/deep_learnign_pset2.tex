@@ -1,0 +1,206 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{DefaultPackages, GeneralCommands, MathematicA}
+
+
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+ 
+  
+\begin{document}
+\section{}
+\subsection{Geometric interpretation of gradient descent}
+
+Let $C$ be the cost function we are aiming to minimize. Then the update rule for gradient descent takes the form 
+$$
+v \rightarrow v^{\prime}=v-\eta \nabla C=v-\epsilon  \frac{\nabla C}{||\nabla C||}.
+$$  
+For the one-dimensional case this simplifies to 
+$$
+v \rightarrow v^{\prime}=v-\epsilon \cdot   \mathrm{sgn}(C^{\prime}(v)).
+$$  
+Geomtrically speaking, this implies we are always going $\epsilon$ to the left or the right. The direction depends on whether the cost function is increasing or decreasing at our current location.  
+
+\subsection{b}
+
+The use of mini-batches is justified by the following heuristic:
+
+\begin{equation}
+\label{eq1}
+\frac{\sum_{j=1}^m \nabla C_{X_j}}{m} \approx \frac{\sum_x \nabla C_x}{n}=\nabla C,	
+\end{equation}
+
+where $n$ is the full size of the training data set and $m$ is the size of the mini-batch. Let's compare $m=1$ to $m=20$. The validity of approximation \eqref{eq1} depends on $m$, with a higher $m$ implying a better approximation (there are established concentration-inequalities to support this claim). For $m=1$ the estimate of the gradient will frequently be worse than for $m=20$. Consequently, 
+	each step with $m=1$ will generally not decrease the cost as much as $m=20$. In worst cases, we might have a terrible approximation and might increase the cost. 
+	
+	On the other hand, evaluating $m=1$ is faster than $m=20$, so we will be able to do more steps with the same time and resources.
+\section{Problem}
+\subsection{}
+Following the notation in the Nelson Book consider (BP2):
+$$
+\delta^l=\left(\left(w^{l+1}\right)^T \delta^{l+1}\right) \odot \sigma^{\prime}\left(z^l\right)
+$$
+In component form, this is 
+$$
+\delta_j^l=\sum_k w_{k j}^{l+1} \delta_k^{l+1} \sigma^{\prime}\left(z_j^l\right).
+$$
+If we replace the activation function at a single neuron by $f$, this becomes for a fixed $l,j$
+$$
+\delta_j^l=\sum_k w_{k j}^{l+1} \delta_k^{l+1} f^{\prime}\left(z_j^l\right).
+$$
+Accordingly, $\delta^{1},\ldots , \delta^{l-1}$, which depend on $\delta_j^l$, will change. By (BP3) and (BP4), the step estimate for $b_j^l$, the biases and weights in all the layers before the change will have to be adjusted.
+\subsection{}
+Let $f$ the softmax activation function i.e.
+$$a_j^L=f_j(z_1^L,\ldots)=\frac{e^{z_j^L}}{\sum_k e^{z_k^L}}, $$
+and $C$ be the log-likelihood cost
+$$
+C \equiv-\ln a_j^L
+$$ 
+
+Then we have for the cost in the outputlayer:
+$$
+\begin{aligned}
+	\delta_j^L&=\frac{\partial C}{\partial z_j^L} 
+	\\&=\frac{\partial C}{\partial a_j^L}\frac{\partial a_j^L}{\partial z_j^L}
+	\\&=\frac{\partial C}{\partial a_j^L}\frac{\partial f_j(z_1^L,\ldots) }{\partial z_j^L}
+	\\&=-\frac{1}{a_j^L}\frac{\partial f_j(z_1^L,\ldots) }{\partial z_j^L}.
+	\end{aligned}
+$$
+
+https://towardsdatascience.com/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1
+
+\todo{do}
+$$
+\delta_j^L=a_j^L-y_j
+$$
+
+\subsection{}
+If we replace the sigmoid layer with a linear identity layer, the neural network simplifies to a single big matrix multiplication from the input layer to the output layer. We will always have $\sigma^{\prime}\left(z^L\right)=1$. Accordingly, we have:
+
+\begin{equation}
+\begin{aligned}
+& \delta^L=\nabla_a C  \\
+& \delta^l=\left(w^{l+1}\right)^T \delta^{l+1}=\prod_{i=l+1}^{L-1} \left(w^i\right)^T \nabla_a C\\
+& \frac{\partial C}{\partial b_j^l}=\delta_j^l = \left(w^{l+1}_{j\cdot }\right)^T\prod_{i=l+2}^{L-1} \left(w^i\right)^T \nabla_a C\\
+& \frac{\partial C}{\partial w_{j k}^l}=a_k^{l-1} \delta_j^l= a_k^{l-1}\left(w^{l+1}_{j\cdot }\right)^T\prod_{i=l+2}^{L-1} \left(w^i\right)^T \nabla_a C
+\end{aligned}
+\end{equation}
+The upgrade step of the gradient descent will be governed by the last two lines.
+\section{Problem}
+\subsection{Problem}
+Consider 
+\begin{equation}
+\label{eq1}
+	-[y \ln a+(1-y) \ln (1-a)],
+\end{equation}
+and
+\begin{equation}
+\label{eq2}
+	-[a \ln y+(1-a) \ln (1-y)].
+\end{equation}
+We know that $a=\sigma(z)\in (0,1)$, because $\sigma$ only takes values in $(0,1)$. On the other hand, $y\in [0,1]$. We will use $a\in (0,1)$ in the following.
+For $y= 0$ we have in equation \eqref{eq1}:
+\begin{equation*}
+	-[y \ln a+(1-y) \ln (1-a)]=\ln (1-a).
+\end{equation*}
+
+This makes sense. For $y= 1$ we have in equation \eqref{eq1}:
+\begin{equation*}
+	-[y \ln a+(1-y) \ln (1-a)]=\ln a.
+\end{equation*}
+
+This makes sense. For $y= 0$ we have in equation \eqref{eq2}:
+\begin{equation*}
+	-[a \ln y+(1-a) \ln (1-y)]= -[a \cdot (-\infty) +(1-a) \cdot 0]=\infty.
+\end{equation*}
+
+This makes no sense. For $y= 1$ we have in equation \eqref{eq2}:
+\begin{equation*}
+	-[a \ln y+(1-a) \ln (1-y)]= -[a \cdot (0) +(1-a) \cdot (-\infty)]=\infty.
+\end{equation*}
+
+This makes no sense. Those problems do not arise in equation \eqref{eq1}, because $a\in (0,1)$.
+
+\subsection{Problem}
+Let $\sigma$ be the sigmoid function and $C$ the cross-entropy cost. By equations (3.7) and (3.8) in the Nielson book we have:
+$$
+\begin{aligned}
+	&\frac{\partial C}{\partial w_j}=\frac{1}{n} \sum_x x_j(\sigma(z)-y),
+	\\&\frac{\partial C}{\partial b}=\frac{1}{n} \sum_x(\sigma(z)-y).
+\end{aligned}
+$$
+Note, that the derivation for those equations in the Nielson book is valid for general $y,a\in [0,1]$. Consequently, if we have $\sigma(z)=y$ for all training inputs, we have $\frac{\partial C}{\partial w_j}=\frac{\partial C}{\partial b}=0$. This shows that $\sigma(z)=y$ is a critical point of the cost function. It remains to verify that it is a minimum. Note, that
+$$
+\begin{aligned}
+	\frac{\partial C}{\partial w_j\partial w_k}&=\frac{\partial C}{\partial w_j\partial z}\frac{\partial z}{\partial w_k}
+	\\&=\left(\frac{1}{n} \sum_x x_j\sigma^{\prime}(z)\right)\left(a_k\right)>0.
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+	\frac{\partial C}{\partial b\partial z}&=\frac{\partial C}{\partial b\partial z}\frac{\partial z}{\partial b}
+	\\&=\left(\frac{1}{n} \sum_x\sigma^{\prime}(z)\right)>0.
+\end{aligned}
+$$
+This concludes the proof. Furthermore, plugging in $\sigma (z)=y$ yields 
+$$
+C=-\frac{1}{n} \sum_x[y \ln y+(1-y) \ln (1-y)].
+$$
+\subsection{Problem}
+Let
+
+$$
+W^1=
+\begin{bmatrix}
+  0.15 & 0.25 \\
+  0.2 & 0.3
+\end{bmatrix}=\begin{bmatrix}
+  w^1_{1,1} & w^1_{2,1} \\
+  w^1_{1,2} & w^1_{2,2}
+\end{bmatrix},
+$$
+\todo{looks wrong}
+$$
+ b^1 = \begin{bmatrix}
+  0.35  \\
+  0.35 
+\end{bmatrix}= \begin{bmatrix}
+  b^1_1  \\
+  b^1_2 
+\end{bmatrix},
+$$
+
+
+$$
+W^2=
+\begin{bmatrix}
+  0.4 &  \\
+   & 0.55
+\end{bmatrix}=\begin{bmatrix}
+  w^2_{1,1} & w^2_{2,1} \\
+  w^2_{1,2} & w^2_{2,2}
+\end{bmatrix},
+$$
+
+$$
+ b^2 = \begin{bmatrix}
+  0.6  \\
+  0.6 
+\end{bmatrix}= \begin{bmatrix}
+  b^2_1  \\
+  b^2_2 
+\end{bmatrix}.
+$$
+Then the output of the neural network for an input $x$ is 
+$$\sigma(W^2(\sigma(W^1x+b^1))+b^2).$$
+We can calculate the $\delta^1,\delta^2, \delta^3$ with the central equations of the back-propagation algorithm:
+$$
+\begin{aligned}
+& \delta^L=\nabla_a C \odot \sigma^{\prime}\left(z^L\right) \\
+& \delta^l=\left(\left(w^{l+1}\right)^T \delta^{l+1}\right) \odot \sigma^{\prime}\left(z^l\right) \\
+\end{aligned}
+$$
+For the cross entropy function $C$ we have
+\end{document}
