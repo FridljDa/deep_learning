@@ -130,7 +130,7 @@ $$
 	\\&\frac{\partial C}{\partial b}=\frac{1}{n} \sum_x(\sigma(z)-y).
 \end{aligned}
 $$
-Note, that the derivation for those equations in the Nielson book is valid for general $y,a\in [0,1]$. Consequently, if we have $\sigma(z)=y$ for all training inputs, we have $\frac{\partial C}{\partial w_j}=\frac{\partial C}{\partial b}=0$. This shows that $\sigma(z)=y$ is a critical point of the cost function. It remains to verify that it is a minimum. Note, that
+Note, that the derivation for those equations in the Nielson book is valid for general $y,a\in [0,1]$. Consequently, if we have $\sigma(z)=y$ for all training inputs, we have $\frac{\partial C}{\partial w_j}=\frac{\partial C}{\partial b}=0$ for all $j$. This shows that $\sigma(z)=y$ is a critical point of the cost function. It remains to verify that it is a minimum. Note, that
 $$
 \begin{aligned}
 	\frac{\partial C}{\partial w_j\partial w_k}&=\frac{\partial C}{\partial w_j\partial z}\frac{\partial z}{\partial w_k}
@@ -140,10 +140,18 @@ $$
 
 $$
 \begin{aligned}
-	\frac{\partial C}{\partial b\partial z}&=\frac{\partial C}{\partial b\partial z}\frac{\partial z}{\partial b}
+	\frac{\partial C}{\partial w_j\partial b}&=\frac{\partial C}{\partial w_j\partial z}\frac{\partial z}{\partial b}
+	\\&=\left(\frac{1}{n} \sum_x x_j\sigma^{\prime}(z)\right)>0.
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+	\frac{\partial C}{\partial b\partial b}&=\frac{\partial C}{\partial b\partial z}\frac{\partial z}{\partial b}
 	\\&=\left(\frac{1}{n} \sum_x\sigma^{\prime}(z)\right)>0.
 \end{aligned}
 $$
+\todo{this does not seem right}
 This concludes the proof. Furthermore, plugging in $\sigma (z)=y$ yields 
 $$
 C=-\frac{1}{n} \sum_x[y \ln y+(1-y) \ln (1-y)].

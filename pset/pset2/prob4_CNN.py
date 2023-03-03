@@ -8,9 +8,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torchvision.utils import save_image, make_grid
+from sklearn.metrics import confusion_matrix
 
 # from einops import rearrange, reduce
 import matplotlib.pyplot as plt
+
+def hello_world():
+    print("Hello World")
 
 # DESCRIBing THE CNN ARCHITECTURE 
 class CNN(nn.Module):
@@ -100,18 +104,36 @@ def test(args, model, device, test_loader, epoch):
         #save samples
         save_image(samples, 'prob4_CNN.png', nrow=8, normalize=True, range=(-1,1))
             
+    #############################################
 
+    if epoch == args.epochs:
+        #create confusion_matrix
+        predictions = []
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            pred = output.argmax(dim=1, keepdim=True)
+            predictions.append(pred.cpu().numpy())
+        predictions = np.concatenate(predictions)
+        #get targets
+        targets = []
+        for data, target in test_loader:
+            targets.append(target.cpu().numpy())
+        targets = np.concatenate(targets)
 
+        cm = confusion_matrix(targets, predictions)
 
-
-
-
-
-
-
-
-
-
+        #plot confusion matrix
+        plt.figure(figsize=(10,10))
+        plt.imshow(cm, cmap='Blues')
+        plt.xlabel('Predicted')
+        plt.ylabel('Actual')
+        plt.xticks(np.arange(10))
+        plt.yticks(np.arange(10))
+        plt.title('Confusion Matrix')
+        plt.savefig('prob4_confusion_matrix.png')
+        #plt.show()
+    
 
 
 
