@@ -20,7 +20,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # loading the dataset
 training_parameters = {
     "img_size": 28,
-    "n_epochs": 1, #24
+    "n_epochs": 2, #24
     "batch_size": 64,
     "learning_rate_generator": 0.0002,
     "learning_rate_discriminator": 0.0002,
