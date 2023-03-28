@@ -52,28 +52,40 @@ $$
 Accordingly, $\delta^{1},\ldots , \delta^{l-1}$, which depend on $\delta_j^l$, will change. By (BP3) and (BP4), the step estimate for $b_j^l$, the biases and weights in all the layers before the change will have to be adjusted.
 \subsection{}
 Let $f$ the softmax activation function i.e.
-$$a_j^L=f_j(z_1^L,\ldots)=\frac{e^{z_j^L}}{\sum_k e^{z_k^L}}, $$
-and $C$ be the log-likelihood cost
+$$a_j^L=\frac{e^{z_j^L}}{\sum_k e^{z_k^L}}, $$
+Let $y$ be the one-hot encoding of the correct label and $C$ be the log-likelihood cost
 $$
-C \equiv-\ln a_j^L
-$$ 
+C=-\sum_{i=1}^c y_i \cdot \log \left(a_i^L \right) 
+$$
+
+
 
 Then we have for the cost in the outputlayer:
+Consider first
 $$
 \begin{aligned}
-	\delta_j^L&=\frac{\partial C}{\partial z_j^L} 
-	\\&=\frac{\partial C}{\partial a_j^L}\frac{\partial a_j^L}{\partial z_j^L}
-	\\&=\frac{\partial C}{\partial a_j^L}\frac{\partial f_j(z_1^L,\ldots) }{\partial z_j^L}
-	\\&=-\frac{1}{a_j^L}\frac{\partial f_j(z_1^L,\ldots) }{\partial z_j^L}.
-	\end{aligned}
+	\frac{\partial -\log(a_j^L)}{\partial z_i^L} 
+	&=\frac{\partial}{\partial z_i^L} -\log \left(\frac{e^{z_j^L}}{\sum_k e^{z_k^L}}\right)
+	\\&=\frac{\partial}{\partial z_i^L} \left(-z_j^L+\log \left(\sum_k e^{z_k^L}\right)\right)
+	\\&=-\one(i=j)+\frac{\partial}{\partial z_i^L} \left(\log \left(\sum_k e^{z_k^L}\right)\right)
+	\\&=-\one(i=j)+\frac{1}{\sum_k e^{z_k^L}} \left(\frac{\partial}{\partial z_i^L} \left(\sum_k e^{z_k^L}\right)\right)
+	\\&=-\one(i=j)+\frac{e^{z_i^L}}{\sum_k e^{z_k^L}} 
+	\\&=-\one(i=j)+a_i^L
+		\end{aligned}
+$$
+Combining, we have
+$$
+\begin{aligned}
+	\delta^L_i&=\frac{\partial C}{\partial z_i^L} 
+	\\&= \frac{\partial }{\partial z_i^L} -\sum_{j=1}^c y_j \cdot \log \left(a_j^L \right)
+	\\&=  -\sum_{j=1}^c y_j \cdot \frac{\partial }{\partial z_i^L} \log \left(a_j^L \right)
+	\\&=  \sum_{j=1}^c y_j \cdot \left(-\one(i=j)+a_i^L\right)
+	\\&=  -y_i+a_i^L \sum_{j=1}^c y_j
+	\\&=  a_i^L-y_i.
+			\end{aligned}
 $$
 
-https://towardsdatascience.com/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1
 
-\todo{do}
-$$
-\delta_j^L=a_j^L-y_j
-$$
 
 \subsection{}
 If we replace the sigmoid layer with a linear identity layer, the neural network simplifies to a single big matrix multiplication from the input layer to the output layer. We will always have $\sigma^{\prime}\left(z^L\right)=1$. Accordingly, we have:
@@ -160,18 +172,18 @@ $$
 Let
 
 $$
-W^1=
+W^2=
 \begin{bmatrix}
   0.15 & 0.25 \\
   0.2 & 0.3
 \end{bmatrix}=\begin{bmatrix}
-  w^1_{1,1} & w^1_{2,1} \\
-  w^1_{1,2} & w^1_{2,2}
+  w^2_{1,1} & w^2_{1,2} \\
+  w^2_{2,1} & w^2_{2,2}
 \end{bmatrix},
 $$
-\todo{looks wrong}
+
 $$
- b^1 = \begin{bmatrix}
+ b^2 = \begin{bmatrix}
   0.35  \\
   0.35 
 \end{bmatrix}= \begin{bmatrix}
@@ -182,18 +194,18 @@ $$
 
 
 $$
-W^2=
+W^3=
 \begin{bmatrix}
-  0.4 &  \\
-   & 0.55
+  0.4 &  0.5\\
+  -0.45 & 0.55
 \end{bmatrix}=\begin{bmatrix}
-  w^2_{1,1} & w^2_{2,1} \\
-  w^2_{1,2} & w^2_{2,2}
+  w^3_{1,1} & w^3_{1,2} \\
+  w^3_{2,1} & w^3_{2,2}
 \end{bmatrix},
 $$
 
 $$
- b^2 = \begin{bmatrix}
+ b^3 = \begin{bmatrix}
   0.6  \\
   0.6 
 \end{bmatrix}= \begin{bmatrix}
@@ -210,5 +222,21 @@ $$
 & \delta^l=\left(\left(w^{l+1}\right)^T \delta^{l+1}\right) \odot \sigma^{\prime}\left(z^l\right) \\
 \end{aligned}
 $$
-For the cross entropy function $C$ we have
+
+The cross-entropy function $C$ is defined by
+$$
+C=-\frac{1}{n} \sum_x[y \ln a+(1-y) \ln (1-a)].
+$$
+This yields 
+$$
+\nabla_a C=-\frac{1}{n} \sum_x\left[\frac{y}{a} -\frac{1-y}{1-a} \right].
+$$
+
+$$
+\begin{aligned}
+	\frac{\partial C}{\partial z}&=-\frac{1}{n} \sum_x\left(\frac{y}{\sigma(z)}-\frac{1-y}{1-\sigma(z)}\right) \frac{\partial \sigma}{\partial z}
+	\\&=-\frac{1}{n} \sum_x\left(\frac{y}{\sigma(z)}-\frac{1-y}{1-\sigma(z)}\right) \sigma(z)(1-\sigma(z))
+	\\&=-\frac{1}{n} \sum_x y(1-\sigma(z)) -\sigma(z) (1-y)
+	\end{aligned}
+$$
 \end{document}

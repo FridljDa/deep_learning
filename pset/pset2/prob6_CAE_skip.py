@@ -12,86 +12,88 @@ from sklearn.metrics import confusion_matrix
 #import vutils
 
 
-
-# from einops import rearrange, reduce
-import matplotlib.pyplot as plt
-
 # DESCRIBing THE CNN ARCHITECTURE 
-class AE(nn.Module):
+class CAE_skip(nn.Module):
     def __init__(self):
-        super(AE, self).__init__()
+        super(CAE_skip, self).__init__()
         # Building an linear encoder with Linear
-        self.encoder = torch.nn.Sequential(
-            torch.nn.Linear(28 * 28, 128),
-            torch.nn.ReLU(),
-            torch.nn.Linear(128, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 36),
-            torch.nn.ReLU(),
-            torch.nn.Linear(36, 18),
-            torch.nn.ReLU(),
-            torch.nn.Linear(18, 2)
-        )
-         
-        # Building an linear decoder with Linear
-        # layer followed by Relu activation function
-        # The Sigmoid activation function
-        # outputs the value between 0 and 1
-        # 9 ==> 784
-        self.decoder = torch.nn.Sequential(
-            torch.nn.Linear(2, 18),
-            torch.nn.ReLU(),
-            torch.nn.Linear(18, 36),
-            torch.nn.ReLU(),
-            torch.nn.Linear(36, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 128),
-            torch.nn.ReLU(),
-            torch.nn.Linear(128, 28 * 28),
-            torch.nn.Sigmoid()
-        )
-        #self.conv1 = nn.Conv2d(1, 40, 5, 1)
-        #self.conv2 = nn.Conv2d(40, 80, 5, 1)
-        
-        #self.fc1 = nn.Linear(4*4*80, 500)
-        #self.fc2 = nn.Linear(500, 2)
-
-        #self.fc3 = nn.Linear(2, 500)
-        #self.fc4 = nn.Linear(500, 4*4*80)
-
-        #self.conv3 = nn.ConvTranspose2d(80, 40, 5, 1)
-        #self.conv4 = nn.ConvTranspose2d(40, 1, 5, 1)
+        #encoder
+        self.conv1 = nn.Conv2d(1, 4, kernel_size = 3, stride=1, padding = 1)
+        self.conv2 = nn.Conv2d(4, 8, kernel_size = 3, stride=1, padding = 1)
+        self.fc1 = nn.Linear(8*7*7, 20)
+        self.fc2 = nn.Linear(20, 2)
+        #decoder
+        self.fc3 = nn.Linear(2, 20)
+        self.fc4 = nn.Linear(20, 8*7*7)
+        self.conv3 = nn.Conv2d(8, 4, kernel_size = 3, stride=1, padding = 1)
+        self.conv4 = nn.Conv2d(4, 1, kernel_size = 3, stride=1, padding = 1)
+       
     
-    def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
+    def forward(self, x0):
+        x10, x4, x1 = self.encoder(x0)
+        x = self.decoder(x10, x4, x1)
 
         return x
     
-    #def encode(self, x):
-    #    x = F.relu(self.conv1(x)) #7
-    #    x = F.max_pool2d(x, 2, 2) #6
-    #    x = F.relu(self.conv2(x)) #5
-    #    x = F.max_pool2d(x, 2, 2) #4
-    #    x = x.view(-1,4*4*80) #3
-    #    x = F.relu(self.fc1(x)) #2 
-    #    x = self.fc2(x) #1
-
-    #    return x
+    def encoder(self, x0):
+        x1 = self.conv1(x0)#
+        x2 = F.relu(x1)
+        x3 = F.max_pool2d(x2, 2, 2)
+        x4 = self.conv2(x3)#
+        x5 = F.relu(x4)
+        x6 = F.max_pool2d(x5, 2, 2)
+        x7 = x6.view(-1,8*7*7)
+        x8 = self.fc1(x7)
+        x9 = F.relu(x8)
+        x10 = self.fc2(x9)
+        return x10, x4, x1
     
-    #def decode(self, x):
-     #   x = F.relu(self.fc3(x)) #1
-     #   x = F.relu(self.fc4(x)) #2
-     #   x = x.view(-1,80,4,4) #3
-    #    x = F.max_unpool2d(x, 2, 2) #4
-
-    #    x = F.relu(self.conv3(x)) #5
-    #    x = F.max_unpool2d(x, 2, 2) #6
-        
-    #    x = self.conv4(x) #7
-
-    #    return x
+    def decoder(self, x10, x4, x1):
+        x11 = self.fc3(x10)
+        x12 = F.relu(x11)
+        x13 = self.fc4(x12)
+        x14 = F.relu(x13)
+        x15 = x14.view(-1,8,7,7)
+        x16 = nn.Upsample(scale_factor=2, mode='nearest')(x15) + x4
+        x17 = F.relu(self.conv3(x16))
+        x18 = nn.Upsample(scale_factor=2, mode='nearest')(x17)+ x1
+        x19 = self.conv4(x18)
+        return x19
     
+def train_log(model, device, train_loader, optimizer, epoch, log_interval = 10):
+
+    # ANNOTATION 1: Enter train mode
+    model.train()
+    train_loss = 0
+    loss_func = torch.nn.MSELoss()
+
+    # ANNOTATION 2: Iterate over batches
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        #data = data.reshape(-1, 28*28)
+        #data = torch.flatten(data, start_dim=1)
+
+        # ANNOTATION 3: Reset gradients
+        optimizer.zero_grad()
+        output = model(data)
+
+        #output = torch.flatten(output, start_dim=1)
+
+        # ANNOTATION 4: Calculate the loss
+        loss = loss_func(data, output)
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+
+        if batch_idx % log_interval == 0:
+            print('\rTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()), end='')
+
+    train_loss /= len(train_loader)
+    print(f"\rTrain Epoch: {epoch: 3} \t| Train set: Average loss: {train_loss:.4f}{' '*50}")
+
 def train(args, model, device, train_loader, optimizer, epoch):
 
     # ANNOTATION 1: Enter train mode
@@ -102,7 +104,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     # ANNOTATION 2: Iterate over batches
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
-        data = data.reshape(-1, 28*28)
+        #data = data.reshape(-1, 28*28)
         #data = torch.flatten(data, start_dim=1)
 
         # ANNOTATION 3: Reset gradients
@@ -126,7 +128,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     train_loss /= len(train_loader)
     print(f"\rTrain Epoch: {epoch: 3} \t| Train set: Average loss: {train_loss:.4f}{' '*50}")
 
-def test(args, model, device, test_loader, epoch):
+def test(model, device, test_loader, epoch):
 
     model.eval()
     test_loss = 0
@@ -138,7 +140,7 @@ def test(args, model, device, test_loader, epoch):
         for data, _ in test_loader:
             data = data.to(device)
 
-            data = data.reshape(-1, 28*28)
+            #data = data.reshape(-1, 28*28)
             output = model(data)
             #test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
             #pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
@@ -147,14 +149,42 @@ def test(args, model, device, test_loader, epoch):
             test_loss += loss_func(data, output).item()
             #print(test_loss)
 
-    #TODO: fix this
+    
     test_loss /= len(test_loader.dataset)
 
     print('Test set: Average loss: {:.4f}\n'.format(
         test_loss))
-    
-    return test_loss
 
+def main_wrapper(train_loader, test_loader, model, file_name):
+    # Training settings
+    args =  dict(batch_size=64, 
+        test_batch_size=1000, 
+        epochs=10, 
+        momentum=0.5,
+        no_cuda=False,
+        seed=1,
+        lr = 0.001,
+        log_interval=10,
+        save_model=True)
+    
+   
+    use_cuda = not args["no_cuda"] and torch.cuda.is_available()
+
+    torch.manual_seed(args["seed"])
+
+    device = torch.device("cuda" if use_cuda else "cpu")
+   
+    # Using an Adam Optimizer with lr = 0.1
+    optimizer = torch.optim.Adam(model.parameters(),
+                             lr=args["lr"],
+                             weight_decay = 1e-8)
+    
+    for epoch in range(1, args["epochs"] + 1):
+        train_log(model, device, train_loader, optimizer, epoch, log_interval = 10)
+        test(model, device, test_loader, epoch)
+
+    if (args["save_model"]):
+        torch.save(model.state_dict(), file_name)
 
 def main():
     # Training settings
@@ -184,6 +214,7 @@ def main():
     torch.manual_seed(args.seed)
 
     device = torch.device("cuda" if use_cuda else "cpu")
+    model = model.to(device)
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
@@ -213,7 +244,7 @@ def main():
         test_dataset, batch_size=args.test_batch_size, drop_last=True, shuffle=True, **kwargs
     )
 
-    model = AE().to(device)
+    model = CAE_skip().to(device)
 
     # Using an Adam Optimizer with lr = 0.1
     optimizer = torch.optim.Adam(model.parameters(),
@@ -222,10 +253,10 @@ def main():
     
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        test(args, model, device, test_loader, epoch)
+        test(model, device, test_loader, epoch)
 
     if (args.save_model):
-        torch.save(model.state_dict(),"mnist_ae.pt")
+        torch.save(model.state_dict(),"mnist_cae_skip.pt")
 
 
 if __name__ == '__main__':

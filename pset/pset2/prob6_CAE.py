@@ -165,7 +165,7 @@ def test(args, model, device, test_loader, epoch):
         plt.imshow(output, cmap='gray')
         #plt.show()
         #save plot
-        plt.savefig('reconstructed_images.png')
+        plt.savefig('cae_reconstructed_images.png')
 
 
 def main():
