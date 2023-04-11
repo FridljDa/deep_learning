@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{DefaultPackages, GeneralCommands, MathematicA}
+
+\bibliography{My Library}
+
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+ 
+  
+\begin{document}
+\section{}
+\section{}
+\section{}
+\subsection{}
+\cite{kipf_semi-supervised_2017} 
+
+Kipf and Welling approximate a filter of a graph signal $x$ in the spectral domain by 
+$$
+g_\theta \star x=U g_\theta U^{\top} x \approx \sum_{k=0}^K \theta_k^{\prime} T_k(\tilde{L}) x.
+$$
+Here $g_\theta$ is a diagonal matrix acting as a filter, $T_k$ is the Chebyshev polynomials of the $k-th$ order, and $\tilde{L}$ being a scaled and translated version of the graph Laplacian $L$. Since $T_k(\tilde{L})$ is a Kth-order polynomial in the Laplacian $L$, the expression only depends on nodes that are at maximum K steps away from the central nodes. Hence, the expression is K-localized. This is analogous to the convolutional layers of CNNs.    
+
+Limitations of this approach include that memory requirement grows linearly in the number of edges. This leads to scalability issues when dealing with very large graphs. Furthermore, the first order approximation of the graph signal limits the expressive power of the method.
+
+\end{document}
