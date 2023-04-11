@@ -4,7 +4,7 @@ from torch_geometric.datasets import TUDataset
 from torch_geometric.data import DataLoader
 from torch_geometric.transforms import Constant
 # import the graph classifier you built in the last step
-from GCN import GraphClassifier, GCNGraphClassifier
+from GCN_03 import GraphClassifier, GCNGraphClassifier
 
 # - - - DATA PREPARATIONS - - -
 dataset = TUDataset(
@@ -60,6 +60,7 @@ def train():
         loss.backward()  # Derive gradients.
         optimizer.step()  # Update parameters based on gradients.
         optimizer.zero_grad()  # Clear gradients.
+    
 def test(loader):
     model.eval()
 

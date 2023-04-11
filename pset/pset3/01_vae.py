@@ -112,7 +112,10 @@ def VAE_loss_function(recon_x, x, mu, logvar):
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
     # https://arxiv.org/abs/1312.6114
-
+    KLD = torch.mean(-0.5 * torch.sum(1 + logvar - mu ** 2 - logvar.exp(), dim = 1), dim = 0)
+    
+    recon_loss = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    
     return recon_loss + KLD
 
 

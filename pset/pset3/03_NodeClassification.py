@@ -4,7 +4,7 @@ from torch_geometric.datasets import Planetoid
 from torch_geometric.transforms import NormalizeFeatures
 from torch_geometric.data import DataLoader
 # import the graph classifier you built in the last step
-from GCN import NodeClassifier
+from GCN_03 import NodeClassifier
 
 # - - - DATA PREPARATIONS - - -
 
